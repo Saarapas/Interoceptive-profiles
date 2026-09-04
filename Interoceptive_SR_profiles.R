@@ -220,7 +220,7 @@ plot (names (b), b, xlab="# clusters", ylab="penalty")
 #choosing a four-cluster solution
 #tehdään klusterointi neljän mukaan
 plot(fitH, hang=-1)
-rect.hclust(fitH, k = 4, border = "red")
+rect.hclust(fitH, k = 5, border = "red")
 clusters_4 <- cutree(fitH, 4)
 clusters_4
 
@@ -229,13 +229,39 @@ tunnedata_klusterit_ehp_maia["clusters_ward_e"] <- clusters_4
 tunnedata_klusterit_ehp_maia <- tunnedata_klusterit_ehp_maia %>% mutate(clusters_ward_faktori = factor(clusters_ward_e, 
                                                                                                        levels = c(1, 2, 3, 4),
                                                                                                        labels = c("Attentive", "Hypo-responsive", "Balanced", "Hypervigilant-distrustful")))
+#validation with 3 and 2 clusters
 
+plot(fitH, hang=-1)
+rect.hclust(fitH, k = 3, border = "red")
+clusters_3 <- cutree(fitH, 3)
+clusters_3
+
+#clusters as factors
+tunnedata_klusterit_ehp_maia["clusters_ward_3"] <- clusters_3
+tunnedata_klusterit_ehp_maia <- tunnedata_klusterit_ehp_maia %>% mutate(clusters_ward_faktori_3 = factor(clusters_ward_3, 
+                                                                                                       levels = c(1, 2, 3),
+                                                                                                       labels = c("A", "B", "C")))
+
+rect.hclust(fitH, k = 2, border = "red")
+clusters_2 <- cutree(fitH, 2)
+clusters_2
+
+#clusters as factors
+tunnedata_klusterit_ehp_maia["clusters_ward_2"] <- clusters_2
+tunnedata_klusterit_ehp_maia <- tunnedata_klusterit_ehp_maia %>% mutate(clusters_ward_faktori_2 = factor(clusters_ward_2, 
+                                                                                                         levels = c(1, 2),
+                                                                                                         labels = c("A", "B")))
+#######
 
 #background information
 tunnedata_klusterit_ehp_maia$bmi <- tunnedata_klusterit_ehp_maia$weight/(tunnedata_klusterit_ehp_maia$height/100)^2
 tunnedata_klusterit_ehp_maia$age <- as.numeric(tunnedata_klusterit_ehp_maia$age)
+
 class(tunnedata_klusterit_ehp_maia$age)
+describe(tunnedata_klusterit_ehp_maia$age)
+
 taustatiedot <- tunnedata_klusterit_ehp_maia
+
 
 #removing 25 missing subjects
 taustatiedot_ei_puuttuvia <- is.na(tunnedata_klusterit_ehp_maia$pain_now)
@@ -292,9 +318,10 @@ tbl_by_cluster <- tunnedata_klusterit_ehp_maia %>%
               missing_text = "Missing") %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2)) %>%
   add_overall() %>%
-  add_n() %>% 
-  add_q(method = 'holm')
+  add_n()
 tbl_by_cluster
+
+table(tunnedata_klusterit_ehp_maia$education, tunnedata_klusterit_ehp_maia$clusters_ward_faktori)
 
 cols_for_table <- c("clusters_ward_faktori",
                     "Pain_now", "Migraine", "Headache", "Abdomen", "Menstrual", "Back_shoulder", "Joint_limb")
@@ -306,39 +333,26 @@ tbl_by_cluster <- taustatiedot %>%
               missing_text = "Missing") %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2)) %>%
   add_overall() %>%
-  add_n() %>% 
-  add_q(method = 'holm')
+  add_n()
 tbl_by_cluster
 
-kruskal.test(age ~ clusters_ward_e,
+T1 <- kruskal.test(age ~ clusters_ward_e,
              data = tunnedata_klusterit_ehp_maia)
-kruskal.test(bmi ~ clusters_ward_e,
+T2 <- kruskal.test(bmi ~ clusters_ward_e,
              data = tunnedata_klusterit_ehp_maia)
-T1 <- 0.01015
-T2 <- 0.9375
-fisher.test(tunnedata_klusterit_ehp_maia$education, tunnedata_klusterit_ehp_maia$clusters_ward_faktori)
-T3 <- 0.2104
-fisher.test(table(taustatiedot$Pain_now, taustatiedot$clusters_ward_faktori))
-T4 <- 0.3919
-fisher.test(table(taustatiedot$Migraine, taustatiedot$clusters_ward_faktori))
-T5 <- 0.01464
-fisher.test(table(taustatiedot$Headache, taustatiedot$clusters_ward_faktori))
-T6 <- 0.155
-fisher.test(table(taustatiedot$Abdomen, taustatiedot$clusters_ward_faktori))
-T7 <- 0.3859
-fisher.test(table(taustatiedot$Menstrual, taustatiedot$clusters_ward_faktori))
-T8 <- 0.7283
-fisher.test(table(taustatiedot$Back_shoulder, taustatiedot$clusters_ward_faktori))
-T9 <- 0.0878
-fisher.test(table(taustatiedot$Joint_limb, taustatiedot$clusters_ward_faktori))
-T10 <- 0.2926
-fisher.test(table(taustatiedot$analgesics, taustatiedot$clusters_ward_faktori), workspace = 2e9)
-T11 <- 0.004368
-fisher.test(table(taustatiedot$prescribed, taustatiedot$clusters_ward_faktori), workspace = 2e9)
-T12 <- 0.746
+T3 <- fisher.test(table(tunnedata_klusterit_ehp_maia$education, tunnedata_klusterit_ehp_maia$clusters_ward_faktori))
+T4 <- fisher.test(table(taustatiedot$Pain_now, taustatiedot$clusters_ward_faktori))
+T5 <- fisher.test(table(taustatiedot$Migraine, taustatiedot$clusters_ward_faktori))
+T6 <- fisher.test(table(taustatiedot$Headache, taustatiedot$clusters_ward_faktori))
+T7 <- fisher.test(table(taustatiedot$Abdomen, taustatiedot$clusters_ward_faktori))
+T8 <- fisher.test(table(taustatiedot$Menstrual, taustatiedot$clusters_ward_faktori))
+T9 <- fisher.test(table(taustatiedot$Back_shoulder, taustatiedot$clusters_ward_faktori))
+T10 <- fisher.test(table(taustatiedot$Joint_limb, taustatiedot$clusters_ward_faktori))
+T11 <- fisher.test(table(taustatiedot$analgesics, taustatiedot$clusters_ward_faktori), workspace = 2e9)
+T12 <- fisher.test(table(taustatiedot$prescribed, taustatiedot$clusters_ward_faktori), workspace = 2e9)
 
 #P-corrections for background information
-p_taustatiedot <- p.adjust(c(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12), method = "holm")
+p_taustatiedot <- p.adjust(c(T1$p.value, T2$p.value, T3$p.value, T4$p.value, T5$p.value, T6$p.value, T7$p.value, T8$p.value, T9$p.value, T10$p.value, T11$p.value, T12$p.value), method = "BH")
 paste(sprintf("%.10f",p_taustatiedot), collapse=",")
 
 
@@ -540,7 +554,7 @@ tableLK <- tunnedata_klusterit_ehp_maia %>%
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>% 
   add_n() %>% 
   add_overall() %>% 
-  add_q(method = 'holm')
+  add_q(method = 'BH')
 tableLK
 
 #MAIA subscales table
@@ -583,7 +597,7 @@ M6<-kruskal.test(MAIA_body_listening ~ clusters_ward_e,
 M7<-kruskal.test(MAIA_trusting ~ clusters_ward_e,
                  data = tunnedata_klusterit_ehp_maia)
 
-MP <- p.adjust(c(M1$p.value, M2$p.value, M3$p.value, M4$p.value, M5$p.value, M6$p.value, M7$p.value))
+MP <- p.adjust(c(M1$p.value, M2$p.value, M3$p.value, M4$p.value, M5$p.value, M6$p.value, M7$p.value), method = "BH")
 paste(sprintf("%.10f",MP), collapse=",")
 
 
@@ -608,7 +622,7 @@ kruskal.test(MAIA_noticing ~ clusters_ward_e,
 
 PT = dunnTest(MAIA_noticing ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 boxplot(MAIA_not_worrying ~ clusters_ward_e,
@@ -621,7 +635,7 @@ kruskal.test(MAIA_not_worrying ~ clusters_ward_e,
 
 PT = dunnTest(MAIA_not_worrying ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 boxplot(MAIA_attention_reg ~ clusters_ward_e,
@@ -634,7 +648,7 @@ kruskal.test(MAIA_attention_reg ~ clusters_ward_e,
 options(scipen = 999)
 PT = dunnTest(MAIA_attention_reg ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 boxplot(MAIA_emotional_awareness ~ clusters_ward_e,
@@ -647,7 +661,7 @@ kruskal.test(MAIA_emotional_awareness ~ clusters_ward_e,
 options(scipen = 999)
 PT = dunnTest(MAIA_emotional_awareness ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 boxplot(MAIA_self_reg ~ clusters_ward_e,
@@ -660,7 +674,7 @@ kruskal.test(MAIA_self_reg ~ clusters_ward_e,
 options(scipen = 999)
 PT = dunnTest(MAIA_self_reg ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 boxplot(MAIA_body_listening ~ clusters_ward_e,
@@ -673,7 +687,7 @@ kruskal.test(MAIA_body_listening ~ clusters_ward_e,
 options(scipen = 999)
 PT = dunnTest(MAIA_body_listening ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 
@@ -687,7 +701,7 @@ kruskal.test(MAIA_trusting ~ clusters_ward_e,
 options(scipen = 999)
 PT = dunnTest(MAIA_trusting ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm") 
+              method="bonferroni") 
 PT
 
 #MAIA pairwise effect sizes with CI
@@ -1101,12 +1115,15 @@ MAIA_long <- tunnedata_klusterit_ehp_maia %>%
                                    "MAIA_emotional_awareness", "MAIA_self_reg", "MAIA_body_listening", 
                                    "MAIA_trusting"),
                           labels=c("Noticing", "Not-worrying", "Attention regulation", "Emotional awareness", "Self-regulation", "Body listening", "Trusting")))
+#subset_1 <- MAIA_long[which(MAIA_long$clusters_ward_faktori %in% c("Hypo-responsive","Hypervigilant-distrustful")),]
+
+gcols <- c("#f8766d", "#7dac06", "#0cb9be", "#c77bff")
 
 ggplot(data=MAIA_long, aes(x=dimension, y=score, fill=factor(clusters_ward_faktori))) +
   geom_boxplot(position = position_dodge(width = 0.7), notch=TRUE)+
   labs(x="", y = "Subscale score", fill="Group") +
   theme_minimal() +
-  scale_fill_discrete(labels = c("Attentive", "Hypo-responsive", "Balanced", "Hypervigilant-distrustful")) +
+  scale_fill_discrete(palette = gcols) +
   theme(text = element_text(size=18),
         axis.text.x = element_text(size = rel(1.0),angle=-30,hjust=0))
 
@@ -1128,8 +1145,7 @@ tbl_EHP_cluster <-
     missing='no') %>% 
   add_n() %>% 
   add_overall() %>% 
-  add_p() %>% 
-  add_q(method = 'holm')
+  add_p() 
 tbl_EHP_cluster
 
 #table for other psychological factors
@@ -1143,8 +1159,7 @@ tbl_by_cluster <- tunnedata_klusterit_ehp_maia %>%
     missing='no') %>% 
   add_n() %>% 
   add_overall() %>% 
-  add_p() %>% 
-  add_q(method = 'holm')
+  add_p() 
 tbl_by_cluster
 
 #corrected p-values for all psychological factors
@@ -1175,7 +1190,7 @@ PCS_mag <- kruskal.test(PCS_magnification ~ clusters_ward_e,
 PCS_hel <- kruskal.test(PCS_helplessness ~ clusters_ward_e,
                         data = tunnedata_klusterit_ehp_maia)
 
-KW_P <- p.adjust(c(E1$p.value, E2$p.value, E3$p.value, E4$p.value, E5$p.value, R$p.value, H1$p.value, H2$p.value, LK$p.value, PCS$p.value, PCS_rum$p.value, PCS_mag$p.value, PCS_hel$p.value))
+KW_P <- p.adjust(c(E1$p.value, E2$p.value, E3$p.value, E4$p.value, E5$p.value, R$p.value, H1$p.value, H2$p.value, LK$p.value, PCS$p.value, PCS_rum$p.value, PCS_mag$p.value, PCS_hel$p.value), method = "BH")
 paste(sprintf("%.10f",KW_P), collapse=",")
 
 #EHP-30 spider plot
@@ -1224,7 +1239,7 @@ kruskal.test(EHP_pain ~ clusters_ward_e,
 
 PT = dunnTest(EHP_pain ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 
 PT
 
@@ -1238,7 +1253,7 @@ kruskal.test(EHP_control ~ clusters_ward_e,
 
 PT = dunnTest(EHP_control ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 
 PT
 
@@ -1252,7 +1267,7 @@ kruskal.test(EHP_emotional ~ clusters_ward_e,
 
 PT = dunnTest(EHP_emotional ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 
 PT
 
@@ -1266,7 +1281,7 @@ kruskal.test(EHP_social ~ clusters_ward_e,
 
 PT = dunnTest(EHP_social ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 
 PT
 
@@ -1280,7 +1295,7 @@ kruskal.test(EHP_self ~ clusters_ward_e,
 
 PT = dunnTest(EHP_self ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 
 PT
 
@@ -1419,7 +1434,7 @@ kruskal_effsize(RS14_Summa ~ clusters_ward_e,
 options(scipen=999)
 PT = dunnTest(RS14_Summa ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 PT
 
 rank_biserial(
@@ -1474,7 +1489,7 @@ kruskal_effsize(LKSum ~ clusters_ward_e,
 options(scipen=999)
 PT = dunnTest(LKSum ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 PT
 
 #childhood significant pairwise effect sizes with CI
@@ -1508,7 +1523,7 @@ kruskal_effsize(PCS_helplessness ~ clusters_ward_e,
 #pairwise comparisons
 PT = dunnTest(PCS_summa ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 PT
 
 #significant pairwise effect sizes
@@ -1530,6 +1545,16 @@ rank_biserial(
   paired = FALSE,
   verbose = TRUE)
 
+rank_biserial(
+  hyporesponsive_hypervigilantdistrustful$PCS_summa,
+  hyporesponsive_hypervigilantdistrustful$clusters_ward_faktori,
+  mu = 0,
+  ci = 0.95,
+  iterations = 200,
+  paired = FALSE,
+  verbose = TRUE)
+
+
 #anxiety
 boxplot(hads_a_summa ~ clusters_ward_e,
         data = tunnedata_klusterit_ehp_maia,
@@ -1545,7 +1570,7 @@ kruskal_effsize(hads_a_summa ~ clusters_ward_e,
 #anxiety pairwise comparisons
 PT = dunnTest(hads_a_summa ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 PT
 
 #anxiety significant pairwise effect sizes
@@ -1567,6 +1592,15 @@ rank_biserial(
   paired = FALSE,
   verbose = TRUE)
 
+rank_biserial(
+  hyporesponsive_balanced$hads_a_summa,
+  hyporesponsive_balanced$clusters_ward_faktori,
+  mu = 0,
+  ci = 0.95,
+  iterations = 200,
+  paired = FALSE,
+  verbose = TRUE)
+
 #depression
 boxplot(hads_d_summa ~ clusters_ward_e,
         data = tunnedata_klusterit_ehp_maia,
@@ -1582,7 +1616,7 @@ kruskal_effsize(hads_d_summa ~ clusters_ward_e,
 #depression pairwise comparisons
 PT = dunnTest(hads_d_summa ~ clusters_ward_faktori,
               data=tunnedata_klusterit_ehp_maia,
-              method="holm")    # Can adjust p-values;
+              method="bonferroni")    # Can adjust p-values;
 PT
 
 #depression significant pairwise effect sizes
@@ -1624,3 +1658,77 @@ m7<-t.test(tunnedata_klusterit_ehp_maia$MAIA_trusting,
            mu = 2.78)
 p_maia <- p.adjust(c(m1$p.value, m2$p.value, m3$p.value, m4$p.value, m5$p.value, m6$p.value, m7$p.value))
 paste(sprintf("%.10f",p_maia), collapse=",")
+
+
+
+plot(fitH, hang=-1)
+rect.hclust(fitH, k = 3, border = "red")
+clusters_3 <- cutree(fitH, 3)
+clusters_3
+
+#clusters as factors
+tunnedata_klusterit_ehp_maia["clusters_ward"] <- clusters_3
+tunnedata_klusterit_ehp_maia <- tunnedata_klusterit_ehp_maia %>% mutate(clusters_ward_faktori_3 = factor(clusters_ward, 
+                                                                                                       levels = c(1, 2, 3),
+                                                                                                       labels = c("A", "B", "C")))
+#3 ryhmää
+cols_for_plot <- c("MAIA_noticing", "MAIA_not_worrying", "MAIA_attention_reg", 
+                   "MAIA_emotional_awareness", "MAIA_self_reg", "MAIA_body_listening", 
+                   "MAIA_trusting")
+
+MAIA_long <- tunnedata_klusterit_ehp_maia %>% 
+  pivot_longer(all_of(cols_for_plot),
+               names_to = 'dimension', values_to='score') %>% 
+  select(c(dimension, score, clusters_ward_faktori_3)) %>% 
+  mutate(dimension=factor(dimension, 
+                          levels=c("MAIA_noticing", "MAIA_not_worrying", "MAIA_attention_reg", 
+                                   "MAIA_emotional_awareness", "MAIA_self_reg", "MAIA_body_listening", 
+                                   "MAIA_trusting"),
+                          labels=c("Noticing", "Not-worrying", "Attention regulation", "Emotional awareness", "Self-regulation", "Body listening", "Trusting")))
+#subset_1 <- MAIA_long[which(MAIA_long$clusters_ward_faktori %in% c("Hypo-responsive","Hypervigilant-distrustful")),]
+
+gcols <- c("#f8766d", "#7dac06", "#c77bff")
+
+ggplot(data=MAIA_long, aes(x=dimension, y=score, fill=factor(clusters_ward_faktori_3))) +
+  geom_boxplot(position = position_dodge(width = 0.7), notch=TRUE)+
+  labs(x="", y = "Subscale score", fill="Group") +
+  theme_minimal() +
+  scale_fill_discrete(palette = gcols) +
+  theme(text = element_text(size=18),
+        axis.text.x = element_text(size = rel(1.0),angle=-30,hjust=0))
+
+# 2 ryhmää
+MAIA_long <- tunnedata_klusterit_ehp_maia %>% 
+  pivot_longer(all_of(cols_for_plot),
+               names_to = 'dimension', values_to='score') %>% 
+  select(c(dimension, score, clusters_ward_faktori_2)) %>% 
+  mutate(dimension=factor(dimension, 
+                          levels=c("MAIA_noticing", "MAIA_not_worrying", "MAIA_attention_reg", 
+                                   "MAIA_emotional_awareness", "MAIA_self_reg", "MAIA_body_listening", 
+                                   "MAIA_trusting"),
+                          labels=c("Noticing", "Not-worrying", "Attention regulation", "Emotional awareness", "Self-regulation", "Body listening", "Trusting")))
+#subset_1 <- MAIA_long[which(MAIA_long$clusters_ward_faktori %in% c("Hypo-responsive","Hypervigilant-distrustful")),]
+
+gcols <- c("#f8766d", "#7dac06")
+
+ggplot(data=MAIA_long, aes(x=dimension, y=score, fill=factor(clusters_ward_faktori_2))) +
+  geom_boxplot(position = position_dodge(width = 0.7), notch=TRUE)+
+  labs(x="", y = "Subscale score", fill="Group") +
+  theme_minimal() +
+  scale_fill_discrete(palette = gcols) +
+  theme(text = element_text(size=18),
+        axis.text.x = element_text(size = rel(1.0),angle=-30,hjust=0))
+
+
+#KLUSTEROINTIEN VERTAILU
+rand.index(tunnedata_klusterit_ehp_maia$clusters_ward_2, tunnedata_klusterit_ehp_maia$clusters_ward_e)
+
+# 
+klusteri_vertailu_3 <- tibble(three=tunnedata_klusterit_ehp_maia$clusters_ward_3, four=tunnedata_klusterit_ehp_maia$clusters_ward_e)
+ggplot(klusteri_vertailu_3, aes(x = three, y = four, col=four))+
+  geom_jitter(width=0.25, height=0.25)
+#class(MAIA_klusteri$clusters_ward)
+
+klusteri_vertailu_2 <- tibble(two=tunnedata_klusterit_ehp_maia$clusters_ward_2, four=tunnedata_klusterit_ehp_maia$clusters_ward_e)
+ggplot(klusteri_vertailu_2, aes(x = two, y = four, col=four))+
+  geom_jitter(width=0.25, height=0.25)
